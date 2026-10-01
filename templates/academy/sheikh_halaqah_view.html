@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}طلاب حلقة {{ halaqah.name }} - صرح القرآن{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-title">
+        <h2>{{ halaqah.name }}</h2>
+        <p>قائمة طلاب حلقتكم، بطاقات المتابعة الفردية، وحالة حضور وتسميع اليوم</p>
+    </div>
+    <div style="display: flex; gap: 0.5rem;">
+        <a href="{% url 'attendance:halaqah_attendance_sheet' halaqah.id %}" class="btn btn-primary">
+            📝 كشف الحضور والغياب اليومي
+        </a>
+        <a href="{% url 'evaluations:halaqah_evaluate' halaqah.id %}" class="btn btn-gold">
+            📖 تقييم التسميع
+        </a>
+        <a href="{% url 'academy:sheikh_dashboard' %}" class="btn btn-outline btn-sm">رجوع للرئيسية</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>👥 بطاقات طلاب الحلقة ({{ students_cards|length }})</h3>
+        <span style="font-size: 0.85rem; color: var(--slate-500);">تاريخ اليوم: {{ today|date:"Y/m/d" }}</span>
+    </div>
+    <div class="card-body">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem;">
+            {% for sc in students_cards %}
+            <div style="background: #ffffff; border: 1.5px solid var(--slate-200); border-radius: var(--radius-lg); padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; box-shadow: var(--shadow-sm);">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                        <div>
+                            <h4 style="font-size: 1.15rem; color: var(--primary-900); font-weight: 800;">
+                                {{ sc.student.display_name }}
+                            </h4>
+                            <small style="color: var(--slate-500);">المستوى: {{ sc.student.current_memorization_level|default:"مبتدئ" }}</small>
+                        </div>
+                        <div>
+                            {% if sc.today_attendance %}
+                                <span class="badge badge-{{ sc.today_attendance.status|slugify }}">
+                                    {{ sc.today_attendance.get_status_display }}
+                                </span>
+                            {% else %}
+                                <span class="badge" style="background: var(--slate-200); color: var(--slate-600);">لم يرصد اليوم</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div style="background: var(--slate-50); border-radius: var(--radius-sm); padding: 0.75rem; margin-bottom: 1rem; font-size: 0.85rem;">
+                        <div style="font-weight: 700; color: var(--slate-700); margin-bottom: 0.25rem;">آخر تسميع مسجل:</div>
+                        {% if sc.latest_recitation %}
+                            <div>الموضع: <span class="quranic-font">{{ sc.latest_recitation.location_display }}</span></div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 0.25rem;">
+                                <span>الدرجة: <strong>{{ sc.latest_recitation.total_score }}/30</strong></span>
+                                <span class="grade-pill grade-{{ sc.latest_recitation.rating_grade|lower }}">
+                                    {{ sc.latest_recitation.rating_grade }}
+                                </span>
+                            </div>
+                            {% if sc.latest_recitation.next_assignment %}
+                            <div style="margin-top: 0.35rem; color: var(--primary-700); font-weight: 600;">
+                                الواجب: {{ sc.latest_recitation.next_assignment }}
+                            </div>
+                            {% endif %}
+                        {% else %}
+                            <span style="color: var(--slate-400);">لا توجد جلسة تسميع مسجلة</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 0.5rem; border-top: 1px solid var(--slate-100); padding-top: 0.75rem;">
+                    <a href="{% url 'evaluations:halaqah_evaluate' halaqah.id %}?student={{ sc.student.id }}" class="btn btn-gold btn-sm" style="flex: 1;">
+                        📖 تقييم تسميع
+                    </a>
+                    <a href="{% url 'reports:student_report' sc.student.id %}" class="btn btn-outline btn-sm" style="flex: 1;">
+                        📜 السجل الشامل
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div style="grid-column: 1 / -1; text-align: center; color: var(--slate-400); padding: 3rem;">
+                لا يوجد طلاب مقيدون في هذه الحلقة حالياً.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

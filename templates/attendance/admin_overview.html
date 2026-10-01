@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}كشوف وسجلات الحضور والغياب العامة - صرح القرآن{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-title">
+        <h2>سجلات الحضور والغياب والتأخير العامة</h2>
+        <p>متابعة التزام الطلاب والشيوخ عبر كافة الحلقات مع خيارات التصفية والفرز</p>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-body">
+        <form method="get" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;">
+            <div>
+                <label class="form-label">التاريخ:</label>
+                <input type="date" name="date" value="{{ selected_date }}" class="form-control" style="width: 170px;">
+            </div>
+            <div>
+                <label class="form-label">الحلقة:</label>
+                <select name="halaqah" class="form-select" style="width: 220px;">
+                    <option value="">-- جميع الحلقات --</option>
+                    {% for h in halaqat %}
+                    <option value="{{ h.id }}" {% if selected_halaqah == h.id|stringformat:"s" %}selected{% endif %}>
+                        {{ h.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="form-label">الحالة:</label>
+                <select name="status" class="form-select" style="width: 190px;">
+                    <option value="">-- جميع الحالات --</option>
+                    {% for val, label in status_choices %}
+                    <option value="{{ val }}" {% if selected_status == val %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <button type="submit" class="btn btn-primary btn-sm" style="padding: 0.65rem 1.25rem;">تصفية النتائج</button>
+                <a href="{% url 'attendance:admin_attendance_overview' %}" class="btn btn-outline btn-sm">إعادة تعيين</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body" style="padding: 0;">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>التاريخ</th>
+                        <th>الطالب</th>
+                        <th>الحلقة</th>
+                        <th>فضيلة الشيخ الراصد</th>
+                        <th>الحالة</th>
+                        <th>مدة التأخير</th>
+                        <th>بيان العذر / الملاحظة</th>
+                        <th>التقرير الشامل</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in records %}
+                    <tr>
+                        <td><strong>{{ r.date|date:"Y/m/d" }}</strong></td>
+                        <td>
+                            <a href="{% url 'reports:student_report' r.student.id %}" style="font-weight: 700; color: var(--primary-900); text-decoration: none;">
+                                {{ r.student.display_name }}
+                            </a>
+                        </td>
+                        <td>{{ r.halaqah.name }}</td>
+                        <td>{{ r.sheikh.display_name|default:r.halaqah.teacher.display_name|default:"-" }}</td>
+                        <td>
+                            <span class="badge badge-{{ r.status|slugify }}">
+                                {{ r.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if r.delay_minutes > 0 %}
+                                <span style="color: var(--gold-700); font-weight: 700;">+{{ r.delay_minutes }} دقيقة</span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td><small style="color: var(--slate-600);">{{ r.notes|default:"-" }}</small></td>
+                        <td>
+                            <a href="{% url 'reports:student_report' r.student.id %}" class="btn btn-outline btn-sm">
+                                سجل الطالب
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; color: var(--slate-400); padding: 3rem;">
+                            لا توجد سجلات حضور تطابق شروط التصفية الحالية.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}التقرير الشامل لفضيلة الشيخ {{ sheikh.display_name }} - صرح القرآن{% endblock %}
+
+{% block content %}
+<div class="no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <div>
+        {% if is_admin %}
+            <a href="{% url 'academy:sheikh_list' %}" class="btn btn-outline btn-sm">رجوع لقائمة الشيوخ</a>
+        {% else %}
+            <a href="{% url 'academy:sheikh_dashboard' %}" class="btn btn-outline btn-sm">رجوع للرئيسية</a>
+        {% endif %}
+    </div>
+    <div>
+        <button type="button" class="btn btn-gold btn-sm" onclick="window.print()">
+            🖨️ طباعة التقرير الشامل / تصدير PDF
+        </button>
+    </div>
+</div>
+
+<div class="report-paper">
+    <div class="report-watermark">إقراء</div>
+
+    <!-- الترويسة الرسمية -->
+    <div class="report-header-banner">
+        <div style="display: flex; align-items: center; gap: 1.25rem;">
+            <div class="brand-icon" style="width: 64px; height: 64px; font-size: 2.2rem;">
+                <span>ق</span>
+            </div>
+            <div class="report-org-title">
+                <h2>{{ academy_name }}</h2>
+                <p style="color: var(--slate-600); font-weight: 600;">التقرير الشامل لأداء وإنجازات فضيلة الشيخ وسجل حلقاته</p>
+            </div>
+        </div>
+        <div style="text-align: left;">
+            <div class="report-badge-date">تاريخ الاستخراج: {% now "Y/m/d - H:i" %}</div>
+            <div style="font-size: 0.8rem; color: var(--slate-500); margin-top: 0.25rem;">الرقم الإداري: #SHK-{{ sheikh.id|stringformat:"04d" }}</div>
+        </div>
+    </div>
+
+    <!-- بطاقة فضيلة الشيخ وسند الإجازات -->
+    <div style="background: var(--slate-50); border: 1.5px solid var(--slate-200); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; border-bottom: 1px dashed var(--slate-200); padding-bottom: 0.75rem;">
+            <div>
+                <h3 style="font-size: 1.4rem; color: var(--primary-900); font-weight: 900;">
+                    فضيلة الشيخ {{ sheikh.display_name }}
+                </h3>
+                <span style="color: var(--gold-700); font-weight: 700; font-size: 0.95rem;">
+                    {{ sheikh.qualification|default:"معلم ومقرئ قرآن كريم" }}
+                </span>
+            </div>
+            <div style="text-align: left;">
+                <span class="badge badge-present" style="font-size: 0.9rem; padding: 0.4rem 1rem;">
+                    سنوات الخبرة: {{ sheikh.years_of_experience }} سنوات
+                </span>
+                <div style="font-size: 0.85rem; color: var(--slate-600); margin-top: 0.35rem;">
+                    الهاتف: <strong dir="ltr">{{ sheikh.phone_number|default:"-" }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <div style="background: #ffffff; border-right: 4px solid var(--gold-500); padding: 1rem 1.25rem; border-radius: var(--radius-sm); margin-top: 0.5rem;">
+            <strong style="color: var(--gold-700); font-size: 0.95rem; display: block; margin-bottom: 0.35rem;">
+                📜 سند الإجازات القرآنية والروايات:
+            </strong>
+            <p style="font-size: 0.92rem; color: var(--slate-800); line-height: 1.7;">
+                {{ sheikh.ijazah_details|default:"مسجل كمعلم محفظ في الأكاديمية" }}
+            </p>
+        </div>
+    </div>
+
+    <!-- المؤشرات الإحصائية العامة للشيخ -->
+    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 2.5rem;">
+        <div class="stat-card" style="padding: 1.25rem;">
+            <div class="stat-info">
+                <h4>الحلقات المشرف عليها</h4>
+                <div class="stat-number">{{ data.active_halaqat_count }}</div>
+                <div class="stat-meta">حلقات نشطة حالياً</div>
+            </div>
+        </div>
+
+        <div class="stat-card gold" style="padding: 1.25rem;">
+            <div class="stat-info">
+                <h4>الطلاب الحاليون</h4>
+                <div class="stat-number" style="color: var(--gold-700);">{{ data.active_students_count }}</div>
+                <div class="stat-meta">طالباً في المجموعات الحالية</div>
+            </div>
+        </div>
+
+        <div class="stat-card blue" style="padding: 1.25rem;">
+            <div class="stat-info">
+                <h4>إجمالي الطلاب عبر التاريخ</h4>
+                <div class="stat-number" style="color: #0284c7;">{{ data.total_distinct_students }}</div>
+                <div class="stat-meta">طالباً تخرجوا أو درسوا على يديه</div>
+            </div>
+        </div>
+
+        <div class="stat-card emerald" style="padding: 1.25rem;">
+            <div class="stat-info">
+                <h4>نسبة التزام الحضور</h4>
+                <div class="stat-number" style="color: var(--primary-700);">{{ data.attendance_rate }}%</div>
+                <div class="stat-meta">{{ data.total_attendance_marked }} سجلاً تم رصده</div>
+            </div>
+        </div>
+
+        <div class="stat-card rose" style="padding: 1.25rem;">
+            <div class="stat-info">
+                <h4>الصفحات المستمعة</h4>
+                <div class="stat-number" style="color: #e11d48;">{{ data.total_pages_listened }}</div>
+                <div class="stat-meta">{{ data.total_recitations_evaluated }} جلسة تسميع مقيمة</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- الحلقات الحالية والسابقة المشرف عليها -->
+    <div style="margin-bottom: 2.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
+            <div style="width: 8px; height: 24px; background: var(--primary-600); border-radius: 4px;"></div>
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--primary-900);">
+                أولاً: الحلقات والمجموعات القرآنية المسندة لفضيلته
+            </h3>
+        </div>
+        <div style="border: 1px solid var(--slate-200); border-radius: var(--radius-md); overflow: hidden;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>اسم الحلقة</th>
+                        <th>المسار والتصنيف</th>
+                        <th>أيام الانعقاد</th>
+                        <th>الفترة والتوقيت</th>
+                        <th>المقر</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in data.halaqat %}
+                    <tr>
+                        <td><strong>{{ h.name }}</strong></td>
+                        <td>{{ h.get_category_display }}</td>
+                        <td>{{ h.days_schedule }}</td>
+                        <td>{{ h.get_time_period_display }} ({{ h.time_detail }})</td>
+                        <td>{{ h.room_location|default:"المقر الرئيسي" }}</td>
+                        <td>
+                            {% if h.is_active %}
+                                <span class="badge badge-present">نشطة</span>
+                            {% else %}
+                                <span class="badge badge-leave">متوقفة</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--slate-400); padding: 2rem;">لا توجد حلقات مسندة للشيخ حالياً.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- الطلاب الحاليون تحت إشراف الشيخ -->
+    <div style="margin-bottom: 2.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
+            <div style="width: 8px; height: 24px; background: var(--gold-500); border-radius: 4px;"></div>
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--primary-900);">
+                ثانياً: الطلاب المقيدون حالياً بمجموعات الشيخ ({{ data.active_students_count }})
+            </h3>
+        </div>
+        <div style="border: 1px solid var(--slate-200); border-radius: var(--radius-md); overflow: hidden;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>اسم الطالب</th>
+                        <th>الحلقة</th>
+                        <th>تاريخ الانضمام</th>
+                        <th>المستوى الحالي</th>
+                        <th>هاتف ولي الأمر</th>
+                        <th>تقرير الطالب الشامل</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for enr in data.active_enrollments %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td><strong>{{ enr.student.display_name }}</strong></td>
+                        <td>{{ enr.halaqah.name }}</td>
+                        <td>{{ enr.start_date|date:"Y/m/d" }}</td>
+                        <td>{{ enr.student.current_memorization_level|default:"مبتدئ" }}</td>
+                        <td dir="ltr">{{ enr.student.guardian_phone }}</td>
+                        <td>
+                            <a href="{% url 'reports:student_report' enr.student.id %}" class="btn btn-outline btn-sm">
+                                📜 التقرير التاريخي
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: var(--slate-400); padding: 2rem;">لا يوجد طلاب مقيدون حالياً.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- تذييل التقرير والاعتماد -->
+    <div style="margin-top: 3.5rem; padding-top: 2rem; border-top: 2px dashed var(--slate-300); display: flex; justify-content: space-between; align-items: flex-end;">
+        <div style="text-align: center; width: 220px;">
+            <p style="font-weight: 700; color: var(--slate-700); margin-bottom: 2.5rem;">توقيع فضيلة الشيخ:</p>
+            <div style="border-bottom: 1.5px solid var(--slate-400); width: 100%; margin-bottom: 0.5rem;"></div>
+            <small style="color: var(--slate-500);">فضيلة الشيخ {{ sheikh.display_name }}</small>
+        </div>
+
+        <div style="text-align: center; border: 2px dashed var(--gold-500); padding: 1rem 1.5rem; border-radius: var(--radius-md);">
+            <div style="font-weight: 800; color: var(--primary-900); margin-bottom: 0.25rem;">ختم إدارة الأكاديمية</div>
+            <small style="color: var(--gold-700);">معتمد وصادر رسمياً</small>
+        </div>
+
+        <div style="text-align: center; width: 220px;">
+            <p style="font-weight: 700; color: var(--slate-700); margin-bottom: 2.5rem;">مدير عام الأكاديمية القرآنية:</p>
+            <div style="border-bottom: 1.5px solid var(--slate-400); width: 100%; margin-bottom: 0.5rem;"></div>
+            <small style="color: var(--slate-500);">أ. عبد الرحمن السعدي</small>
+        </div>
+    </div>
+</div>
+{% endblock %}

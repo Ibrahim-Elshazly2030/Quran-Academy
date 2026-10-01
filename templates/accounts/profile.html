@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}الملف الشخصي - {{ user.display_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-title">
+        <h2>الملف الشخصي والإعدادات</h2>
+        <p>بيانات الحساب الشخصي وتعديل كلمة المرور</p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+    <!-- بطاقة البيانات الشخصية -->
+    <div class="card">
+        <div class="card-header">
+            <h3>👤 بيانات المستخدم</h3>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <tr>
+                    <th style="width: 35%;">الاسم الكامل:</th>
+                    <td><strong>{{ user.display_name }}</strong></td>
+                </tr>
+                <tr>
+                    <th>اسم المستخدم:</th>
+                    <td><code>{{ user.username }}</code></td>
+                </tr>
+                <tr>
+                    <th>الدور في المنظومة:</th>
+                    <td><span class="role-pill">{{ user.get_role_display }}</span></td>
+                </tr>
+                <tr>
+                    <th>رقم الهاتف:</th>
+                    <td>{{ user.phone_number|default:"غير محدد" }}</td>
+                </tr>
+                <tr>
+                    <th>البريد الإلكتروني:</th>
+                    <td>{{ user.email|default:"غير مسجل" }}</td>
+                </tr>
+                {% if user.is_teacher_role %}
+                <tr>
+                    <th>المؤهل العلمي:</th>
+                    <td>{{ user.qualification|default:"-" }}</td>
+                </tr>
+                <tr>
+                    <th>سنوات الخبرة:</th>
+                    <td>{{ user.years_of_experience }} سنوات</td>
+                </tr>
+                <tr>
+                    <th>الإجازات والسند:</th>
+                    <td>{{ user.ijazah_details|linebreaks }}</td>
+                </tr>
+                {% endif %}
+                {% if user.is_student_role %}
+                <tr>
+                    <th>ولي الأمر:</th>
+                    <td>{{ user.guardian_name }} ({{ user.guardian_phone }})</td>
+                </tr>
+                <tr>
+                    <th>المستوى القرآني:</th>
+                    <td>{{ user.current_memorization_level }}</td>
+                </tr>
+                {% endif %}
+            </table>
+        </div>
+    </div>
+
+    <!-- نموذج تغيير كلمة المرور -->
+    <div class="card">
+        <div class="card-header">
+            <h3>🔒 تغيير كلمة المرور</h3>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="change_password" value="1">
+                {% for field in password_form %}
+                <div class="form-group">
+                    <label class="form-label">{{ field.label }}:</label>
+                    {{ field }}
+                    {% if field.errors %}
+                    <small style="color: #e11d48;">{{ field.errors.0 }}</small>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    حفظ كلمة المرور الجديدة
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

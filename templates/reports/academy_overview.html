@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}التقرير التحليلي الشامل - {{ academy_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-title">
+        <h2>التقرير التحليلي الشامل للمنظومة</h2>
+        <p>مؤشرات الأداء التراكمية، معدلات الإنجاز القرآني، ونسب الحضور والانضباط</p>
+    </div>
+    <button type="button" class="btn btn-gold btn-sm" onclick="window.print()">
+        🖨️ طباعة التقرير العام
+    </button>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon emerald">👥</div>
+        <div class="stat-info">
+            <h4>إجمالي الطلاب النشطين</h4>
+            <div class="stat-number">{{ stats.total_students }}</div>
+            <div class="stat-meta">مقيدون في الحلقات</div>
+        </div>
+    </div>
+
+    <div class="stat-card gold">
+        <div class="stat-icon gold">📖</div>
+        <div class="stat-info">
+            <h4>هيئة المقرئين والشيوخ</h4>
+            <div class="stat-number">{{ stats.total_sheikhs }}</div>
+            <div class="stat-meta">معلمون محفظون</div>
+        </div>
+    </div>
+
+    <div class="stat-card blue">
+        <div class="stat-icon blue">🕌</div>
+        <div class="stat-info">
+            <h4>الحلقات والمجموعات</h4>
+            <div class="stat-number">{{ stats.total_halaqat }}</div>
+            <div class="stat-meta">حلقات نشطة يومياً</div>
+        </div>
+    </div>
+
+    <div class="stat-card rose">
+        <div class="stat-icon rose">📜</div>
+        <div class="stat-info">
+            <h4>جلسات التسميع المنجزة</h4>
+            <div class="stat-number">{{ stats.total_recitations }}</div>
+            <div class="stat-meta">{{ stats.total_pages }} صفحة تم تسميعها</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>🕌 ملخص أداء الحلقات القرآنية</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>الحلقة</th>
+                        <th>فضيلة الشيخ</th>
+                        <th>المسار</th>
+                        <th>الجدول الزمني</th>
+                        <th>الطلاب المقيدون</th>
+                        <th>كشف الحضور</th>
+                        <th>جلسة تقييم</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in halaqat %}
+                    <tr>
+                        <td><strong>{{ h.name }}</strong></td>
+                        <td>{{ h.teacher.display_name|default:"غير محدد" }}</td>
+                        <td><span class="badge" style="background: var(--slate-100); color: var(--slate-800);">{{ h.get_category_display }}</span></td>
+                        <td>{{ h.days_schedule }} ({{ h.time_detail }})</td>
+                        <td><strong>{{ h.current_students_count }} طالب</strong></td>
+                        <td>
+                            <a href="{% url 'attendance:halaqah_attendance_sheet' h.id %}" class="btn btn-primary btn-sm">كشف الحضور</a>
+                        </td>
+                        <td>
+                            <a href="{% url 'evaluations:halaqah_evaluate' h.id %}" class="btn btn-gold btn-sm">تقييم تسميع</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

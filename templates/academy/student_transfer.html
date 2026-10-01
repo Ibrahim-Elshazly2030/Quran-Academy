@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}نقل الطالب {{ student.display_name }} - صرح القرآن{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-title">
+        <h2>نقل الطالب إلى حلقة وشيخ آخر</h2>
+        <p>إجراء حركة نقل مع التوثيق الكامل للأرشيف التاريخي وسجل التنقلات</p>
+    </div>
+    <a href="{% url 'academy:student_list' %}" class="btn btn-outline btn-sm">رجوع لقائمة الطلاب</a>
+</div>
+
+<div class="card" style="max-width: 750px; margin: 0 auto; border: 2px solid var(--primary-500);">
+    <div class="card-header" style="background: var(--primary-50);">
+        <h3 style="color: var(--primary-900);">🔄 استمارة نقل الطالب وحفظ التاريخ</h3>
+    </div>
+    <div class="card-body" style="padding: 2rem;">
+        
+        <!-- ملخص الوضع الحالي للطالب -->
+        <div style="background: var(--slate-100); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <span style="font-size: 1.15rem; font-weight: 800; color: var(--primary-900);">
+                    الطالب: {{ student.display_name }}
+                </span>
+                <span class="badge badge-present">مسجل حالياً</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.9rem;">
+                <div>
+                    <span style="color: var(--slate-500);">الحلقة الحالية:</span>
+                    <strong>{{ current_enrollment.halaqah.name|default:"غير معين بحلقة" }}</strong>
+                </div>
+                <div>
+                    <span style="color: var(--slate-500);">الشيخ المشرف الحالي:</span>
+                    <strong style="color: var(--gold-700);">
+                        {{ current_enrollment.assigned_sheikh.display_name|default:current_enrollment.halaqah.teacher.display_name|default:"غير محدد" }}
+                    </strong>
+                </div>
+                <div>
+                    <span style="color: var(--slate-500);">تاريخ الالتحاق بالحلقة الحالية:</span>
+                    <strong>{{ current_enrollment.start_date|date:"Y/m/d"|default:"-" }}</strong>
+                </div>
+                <div>
+                    <span style="color: var(--slate-500);">المستوى القرآني:</span>
+                    <strong>{{ student.current_memorization_level|default:"تحت التأسيس" }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label" style="font-size: 1rem; color: var(--primary-900);">
+                    {{ form.new_halaqah.label }}: *
+                </label>
+                {{ form.new_halaqah }}
+                <small style="color: var(--slate-500);">سيتم تعيين الطالب للشيخ المشرف على هذه الحلقة تلقائياً، مع إنهاء قيده السابق وتوثيقه في سجله التاريخي.</small>
+            </div>
+
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <label class="form-label" style="font-size: 1rem; color: var(--primary-900);">
+                    {{ form.transfer_reason.label }}: *
+                </label>
+                {{ form.transfer_reason }}
+                <small style="color: var(--slate-500);">يرجى توثيق سبب النقل بدقة (مثلاً: إتمام حفظ الجزء العاشر، توصية الشيخ بالترقية، تغيير مواعيد الطالب...) حيث يظهر هذا البيان في تقرير الطالب الشامل.</small>
+            </div>
+
+            <div style="background: #fffbeb; border-right: 4px solid var(--gold-500); padding: 1rem; border-radius: var(--radius-sm); margin-top: 1.5rem; font-size: 0.88rem; color: #92400e;">
+                ⚠️ <strong>ملاحظة هامة:</strong> المنظومة تحتفظ تلقائياً بكافة سجلات حضور وغياب وتقييمات الطالب مع شيخه وحلقته السابقة دون أن تفقد أي بيان، وسيظهر تسلسل حلقاته بالكامل في تقريره التراكمي.
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; border-top: 1px solid var(--slate-200); padding-top: 1.5rem;">
+                <a href="{% url 'academy:student_list' %}" class="btn btn-outline">إلغاء</a>
+                <button type="submit" class="btn btn-primary" style="padding: 0.65rem 2rem;">
+                    🔄 اعتماد النقل وحفظ السجل التاريخي
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

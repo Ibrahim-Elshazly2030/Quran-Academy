@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}إدارة الحلقات والمجموعات القرآنية - صرح القرآن{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-title">
+        <h2>الحلقات والمجموعات القرآنية</h2>
+        <p>إدارة الحلقات، تعيين الشيوخ، جداول المواعيد، ومتابعة الطاقة الاستيعابية</p>
+    </div>
+    <a href="{% url 'academy:halaqah_add' %}" class="btn btn-primary">➕ إنشاء حلقة جديدة</a>
+</div>
+
+<div class="halaqat-grid">
+    {% for h in halaqat %}
+    <div class="halaqah-card">
+        <div>
+            <div class="halaqah-card-header">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div class="halaqah-title">{{ h.name }}</div>
+                    {% if h.is_active %}
+                        <span class="badge badge-present">نشطة</span>
+                    {% else %}
+                        <span class="badge badge-absent-unexcused">متوقفة</span>
+                    {% endif %}
+                </div>
+                <div class="sheikh-name">
+                    <span>فضيلة الشيخ:</span>
+                    {% if h.teacher %}
+                        <a href="{% url 'reports:sheikh_report' h.teacher.id %}" style="color: inherit; text-decoration: underline;">
+                            {{ h.teacher.display_name }}
+                        </a>
+                    {% else %}
+                        <span style="color: var(--slate-400);">غير محدد</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <ul class="halaqah-meta">
+                <li><span>📂 التصنيف والمسار:</span> <strong>{{ h.get_category_display }}</strong></li>
+                <li><span>🗓️ أيام الانعقاد:</span> {{ h.days_schedule }}</li>
+                <li><span>⏰ الفترة والتوقيت:</span> {{ h.get_time_period_display }} ({{ h.time_detail }})</li>
+                <li><span>📍 القاعة والمقر:</span> {{ h.room_location|default:"المقر الرئيسي" }}</li>
+                <li>
+                    <span>👥 الطلاب المقيدون:</span>
+                    <strong style="color: var(--primary-700);">{{ h.active_students }} / {{ h.max_students }} طالب</strong>
+                </li>
+            </ul>
+
+            {% if h.description %}
+            <p style="font-size: 0.85rem; color: var(--slate-600); background: var(--slate-50); padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); margin-bottom: 1rem;">
+                {{ h.description }}
+            </p>
+            {% endif %}
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; border-top: 1px solid var(--slate-100); padding-top: 1rem;">
+            <a href="{% url 'academy:halaqah_detail' h.id %}" class="btn btn-outline btn-sm" style="flex: 1;">تفاصيل والطلاب</a>
+            <a href="{% url 'attendance:halaqah_attendance_sheet' h.id %}" class="btn btn-primary btn-sm" style="flex: 1;">كشف الحضور</a>
+            <a href="{% url 'evaluations:halaqah_evaluate' h.id %}" class="btn btn-gold btn-sm" style="flex: 1;">تقييم التسميع</a>
+            <a href="{% url 'academy:halaqah_edit' h.id %}" class="btn btn-outline btn-sm" title="تعديل الحلقة">✏️</a>
+        </div>
+    </div>
+    {% empty %}
+    <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 1rem; background: #fff; border-radius: var(--radius-lg); border: 1px dashed var(--slate-300);">
+        <p style="font-size: 1.1rem; color: var(--slate-500); margin-bottom: 1rem;">لم يتم إنشاء أي حلقات قرآنية بعد.</p>
+        <a href="{% url 'academy:halaqah_add' %}" class="btn btn-primary">➕ إنشاء أول حلقة الآن</a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

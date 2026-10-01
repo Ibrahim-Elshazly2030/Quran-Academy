@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}إدارة الطلاب وسجلات القيد - صرح القرآن{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-title">
+        <h2>سجل الطلاب المقيدين</h2>
+        <p>إدارة بيانات الطلاب، متابعة الحلقات والشيوخ المشرفين، وإجراء التحويلات مع حفظ التاريخ</p>
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
+        <form method="get" style="display: flex; gap: 0.5rem;">
+            <input type="text" name="q" value="{{ query }}" placeholder="بحث باسم الطالب أو ولي الأمر..." class="form-control" style="width: 250px;">
+            <button type="submit" class="btn btn-outline btn-sm">بحث</button>
+        </form>
+        <a href="{% url 'academy:student_add' %}" class="btn btn-primary">➕ تسجيل طالب جديد</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body" style="padding: 0;">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>الطالب</th>
+                        <th>الحلقة الحالية</th>
+                        <th>فضيلة الشيخ المشرف</th>
+                        <th>المستوى القرآني</th>
+                        <th>ولي الأمر وهاتفه</th>
+                        <th style="text-align: center;">الإجراءات والتقرير الشامل</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in students_with_meta %}
+                    <tr>
+                        <td>
+                            <strong style="font-size: 1rem; color: var(--primary-900);">
+                                {{ item.user.display_name }}
+                            </strong>
+                            <div style="font-size: 0.75rem; color: var(--slate-400);">الهاتف: {{ item.user.phone_number|default:"-" }}</div>
+                        </td>
+                        <td>
+                            {% if item.current_halaqah %}
+                                <a href="{% url 'academy:halaqah_detail' item.current_halaqah.id %}" style="font-weight: 700; color: var(--primary-700); text-decoration: none;">
+                                    🕌 {{ item.current_halaqah.name }}
+                                </a>
+                            {% else %}
+                                <span class="badge badge-leave">غير ملتحق بحلقة</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.current_sheikh %}
+                                <a href="{% url 'reports:sheikh_report' item.current_sheikh.id %}" style="color: var(--gold-700); font-weight: 700; text-decoration: underline;">
+                                    {{ item.current_sheikh.display_name }}
+                                </a>
+                            {% else %}
+                                <span style="color: var(--slate-400);">-</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.user.current_memorization_level|default:"مبتدئ" }}</td>
+                        <td>
+                            <div>{{ item.user.guardian_name|default:"-" }} ({{ item.user.guardian_relation }})</div>
+                            <small style="color: var(--slate-500);">{{ item.user.guardian_phone }}</small>
+                        </td>
+                        <td style="text-align: center;">
+                            <div style="display: inline-flex; gap: 0.35rem;">
+                                <a href="{% url 'reports:student_report' item.user.id %}" class="btn btn-gold btn-sm" title="استعراض التقرير الشامل المستوفي لكافة تاريخ الطالب ومجموعاته">
+                                    📜 التقرير الشامل
+                                </a>
+                                <a href="{% url 'academy:student_transfer' item.user.id %}" class="btn btn-primary btn-sm" title="نقل الطالب لحلقة وشيخ آخر مع أرشفة السجل السابق">
+                                    🔄 نقل لحلقة أخرى
+                                </a>
+                                <a href="{% url 'academy:student_edit' item.user.id %}" class="btn btn-outline btn-sm" title="تعديل البيانات الشخصية">
+                                    ✏️
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--slate-400); padding: 3rem;">
+                            لا يوجد طلاب مسجلون حالياً.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

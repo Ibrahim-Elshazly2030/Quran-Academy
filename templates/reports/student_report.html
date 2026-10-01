@@ -1,0 +1,364 @@
+{% extends 'base.html' %}
+
+{% block title %}التقرير التاريخي المستوفي للطالب: {{ student.display_name }}{% endblock %}
+
+{% block content %}
+<!-- أزرار الإجراءات العلوية -->
+<div class="no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <div>
+        <a href="{% url 'academy:student_list' %}" class="btn btn-outline btn-sm">رجوع لقائمة الطلاب</a>
+    </div>
+    <div style="display: flex; gap: 0.5rem;">
+        <button type="button" class="btn btn-gold btn-sm" onclick="window.print()">
+            🖨️ طباعة التقرير الشامل / تصدير PDF
+        </button>
+        {% if is_admin %}
+        <a href="{% url 'academy:student_transfer' student.id %}" class="btn btn-primary btn-sm">
+            🔄 نقل الطالب إلى حلقة أخرى
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- مستند التقرير الشامل الفاخر -->
+<div class="report-paper">
+    <div class="report-watermark">القرآن</div>
+
+    <!-- ترويسة التقرير الرسمية -->
+    <div class="report-header-banner">
+        <div style="display: flex; align-items: center; gap: 1.25rem;">
+            <div class="brand-icon" style="width: 64px; height: 64px; font-size: 2.2rem;">
+                <span>ق</span>
+            </div>
+            <div class="report-org-title">
+                <h2>{{ academy_name }}</h2>
+                <p style="color: var(--slate-600); font-weight: 600;">السجل التاريخي التراكمي الشامل لمسيرة الطالب القرآنية</p>
+            </div>
+        </div>
+        <div style="text-align: left;">
+            <div class="report-badge-date">تاريخ استخراج التقرير: {% now "Y/m/d - H:i" %}</div>
+            <div style="font-size: 0.8rem; color: var(--slate-500); margin-top: 0.25rem;">الرقم الأكاديمي: #STU-{{ student.id|stringformat:"04d" }}</div>
+        </div>
+    </div>
+
+    <!-- بيانات الطالب الأساسية وولي الأمر -->
+    <div style="background: var(--slate-50); border: 1.5px solid var(--slate-200); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; border-bottom: 1px dashed var(--slate-200); padding-bottom: 0.75rem;">
+            <div>
+                <h3 style="font-size: 1.4rem; color: var(--primary-900); font-weight: 900;">
+                    {{ student.display_name }}
+                </h3>
+                <span style="color: var(--gold-700); font-weight: 700; font-size: 0.95rem;">
+                    المستوى القرآني: {{ student.current_memorization_level|default:"تحت التأسيس" }}
+                </span>
+            </div>
+            <div style="text-align: left;">
+                <span class="badge badge-present" style="font-size: 0.9rem; padding: 0.4rem 1rem;">
+                    الحلقة الحالية: {{ data.current_halaqah.name|default:"غير معين بحلقة" }}
+                </span>
+                <div style="font-size: 0.85rem; color: var(--slate-600); margin-top: 0.35rem;">
+                    فضيلة الشيخ الحالي: <strong>{{ data.current_sheikh.display_name|default:"غير محدد" }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; font-size: 0.9rem;">
+            <div>
+                <span style="color: var(--slate-500);">رقم الهوية:</span>
+                <strong>{{ student.national_id|default:"-" }}</strong>
+            </div>
+            <div>
+                <span style="color: var(--slate-500);">تاريخ الميلاد:</span>
+                <strong>{{ student.birth_date|date:"Y/m/d"|default:"-" }}</strong>
+            </div>
+            <div>
+                <span style="color: var(--slate-500);">تاريخ الالتحاق بالمنظومة:</span>
+                <strong>{{ student.date_joined|date:"Y/m/d" }}</strong>
+            </div>
+            <div>
+                <span style="color: var(--slate-500);">ولي الأمر:</span>
+                <strong>{{ student.guardian_name|default:"-" }} ({{ student.guardian_relation }})</strong>
+            </div>
+            <div>
+                <span style="color: var(--slate-500);">هاتف ولي الأمر:</span>
+                <strong dir="ltr">{{ student.guardian_phone|default:"-" }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- 1. السجل التاريخي الكامل لكافة المجموعات والشيوخ عبر مسيرة الطالب -->
+    <div style="margin-bottom: 2.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
+            <div style="width: 8px; height: 24px; background: var(--gold-500); border-radius: 4px;"></div>
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--primary-900);">
+                أولاً: السجل التاريخي للمجموعات والحلقات والشيوخ المشرفين
+            </h3>
+        </div>
+        <p style="font-size: 0.88rem; color: var(--slate-600); margin-bottom: 1.25rem;">
+            يوثق هذا الجدول كافة الحلقات التي انتمى إليها الطالب منذ تسجيله، والشيوخ الذين تتلمذ على أيديهم، وتواريخ الانتقال والتوصيات الإدارية:
+        </p>
+
+        <div class="timeline">
+            {% for enr in data.enrollments %}
+            <div class="timeline-item">
+                <div class="timeline-dot {% if enr.status != 'active' %}past{% endif %}"></div>
+                <div class="timeline-card">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                        <div>
+                            <strong style="font-size: 1.1rem; color: var(--primary-900);">
+                                🕌 {{ enr.halaqah.name }}
+                            </strong>
+                            <div style="color: var(--gold-700); font-weight: 700; font-size: 0.9rem; margin-top: 0.2rem;">
+                                فضيلة الشيخ المشرف: {{ enr.assigned_sheikh.display_name|default:enr.halaqah.teacher.display_name|default:"غير محدد" }}
+                            </div>
+                        </div>
+                        <div>
+                            <span class="badge {% if enr.status == 'active' %}badge-present{% else %}badge-leave{% endif %}">
+                                {{ enr.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div style="font-size: 0.85rem; color: var(--slate-600); display: flex; gap: 1.5rem; margin-bottom: 0.5rem;">
+                        <span>🗓️ من: <strong>{{ enr.start_date|date:"Y/m/d" }}</strong></span>
+                        <span>إلى: <strong>{{ enr.end_date|date:"Y/m/d"|default:"حتى الآن" }}</strong></span>
+                    </div>
+
+                    {% if enr.notes %}
+                    <div style="background: #ffffff; border-right: 3px solid var(--primary-500); padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--slate-700); margin-top: 0.5rem;">
+                        <strong>ملاحظات النقل والتقييم:</strong> {{ enr.notes }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <p style="color: var(--slate-500);">لا توجد سجلات تاريخية مسجلة.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 2. إحصائيات وسجل الحضور والغياب والتأخير -->
+    <div style="margin-bottom: 2.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
+            <div style="width: 8px; height: 24px; background: var(--primary-600); border-radius: 4px;"></div>
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--primary-900);">
+                ثانياً: سجل الحضور والغياب والانضباط التراكمي
+            </h3>
+        </div>
+
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin-bottom: 1.25rem;">
+            <div class="stat-card" style="padding: 1rem;">
+                <div class="stat-info">
+                    <h4>نسبة الالتزام بالحضور</h4>
+                    <div class="stat-number" style="color: var(--primary-700);">{{ data.attendance_stats.attendance_rate }}%</div>
+                    <div class="stat-meta">{{ data.attendance_stats.total_sessions }} جلسة مسجلة</div>
+                </div>
+            </div>
+
+            <div class="stat-card" style="padding: 1rem;">
+                <div class="stat-info">
+                    <h4>أيام الحضور (حاضر)</h4>
+                    <div class="stat-number" style="color: #059669;">{{ data.attendance_stats.present_count }}</div>
+                    <div class="stat-meta">حضور كامل في الموعد</div>
+                </div>
+            </div>
+
+            <div class="stat-card gold" style="padding: 1rem;">
+                <div class="stat-info">
+                    <h4>غياب بعذر مقبول</h4>
+                    <div class="stat-number" style="color: #d97706;">{{ data.attendance_stats.absent_excused_count }}</div>
+                    <div class="stat-meta">بإشعار مسبق</div>
+                </div>
+            </div>
+
+            <div class="stat-card rose" style="padding: 1rem;">
+                <div class="stat-info">
+                    <h4>غياب بدون عذر</h4>
+                    <div class="stat-number" style="color: #e11d48;">{{ data.attendance_stats.absent_unexcused_count }}</div>
+                    <div class="stat-meta">غياب غير مبرر</div>
+                </div>
+            </div>
+
+            <div class="stat-card blue" style="padding: 1rem;">
+                <div class="stat-info">
+                    <h4>تأخير بعذر</h4>
+                    <div class="stat-number" style="color: #0284c7;">{{ data.attendance_stats.late_excused_count }}</div>
+                    <div class="stat-meta">إجمالي التأخير: {{ data.attendance_stats.total_delay_minutes }} دقيقة</div>
+                </div>
+            </div>
+
+            <div class="stat-card rose" style="padding: 1rem;">
+                <div class="stat-info">
+                    <h4>تأخير بدون عذر</h4>
+                    <div class="stat-number" style="color: #ea580c;">{{ data.attendance_stats.late_unexcused_count }}</div>
+                    <div class="stat-meta">تأخر دون إشعار</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- جدول سجلات الحضور الأخيرة -->
+        <div style="border: 1px solid var(--slate-200); border-radius: var(--radius-md); overflow: hidden;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>التاريخ</th>
+                        <th>الحلقة</th>
+                        <th>فضيلة الشيخ الراصد</th>
+                        <th>الحالة</th>
+                        <th>التأخير</th>
+                        <th>بيان العذر / الملاحظات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for att in data.attendance_history %}
+                    <tr>
+                        <td><strong>{{ att.date|date:"Y/m/d" }}</strong></td>
+                        <td>{{ att.halaqah.name }}</td>
+                        <td>{{ att.sheikh.display_name|default:att.halaqah.teacher.display_name|default:"-" }}</td>
+                        <td>
+                            <span class="badge badge-{{ att.status|slugify }}">
+                                {{ att.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if att.delay_minutes > 0 %}
+                                <span style="color: var(--gold-700); font-weight: 700;">+{{ att.delay_minutes }} دقيقة</span>
+                            {% else %}-{% endif %}
+                        </td>
+                        <td><small style="color: var(--slate-600);">{{ att.notes|default:"-" }}</small></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--slate-400); padding: 1.5rem;">لا توجد سجلات حضور مسجلة بعد.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+            {% if org and org.report_footer_quote %}
+        <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px dashed var(--slate-200); text-align: center; color: var(--primary-800); font-family: 'Amiri', serif; font-size: 1.05rem;">
+            {{ org.report_footer_quote }}
+        </div>
+        {% endif %}
+</div>
+
+    <!-- 3. سجل التسميع والتقييمات القرآنية التراكمي -->
+    <div style="margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
+            <div style="width: 8px; height: 24px; background: var(--gold-600); border-radius: 4px;"></div>
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--primary-900);">
+                ثالثاً: سجل التسميع والتقييمات القرآنية (وفق جداول التقييم)
+            </h3>
+        </div>
+
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 1.25rem;">
+            <div class="stat-card" style="padding: 1rem;">
+                <div class="stat-info">
+                    <h4>إجمالي جلسات التسميع</h4>
+                    <div class="stat-number">{{ data.recitation_stats.total_recitations }}</div>
+                    <div class="stat-meta">{{ data.recitation_stats.total_pages }} صفحة منجزة</div>
+                </div>
+            </div>
+
+            <div class="stat-card gold" style="padding: 1rem;">
+                <div class="stat-info">
+                    <h4>متوسط جودة الحفظ</h4>
+                    <div class="stat-number" style="color: var(--gold-700);">{{ data.recitation_stats.avg_memorization }} / 10</div>
+                    <div class="stat-meta">معيار الضبط والاستحضار</div>
+                </div>
+            </div>
+
+            <div class="stat-card emerald" style="padding: 1rem;">
+                <div class="stat-info">
+                    <h4>متوسط أحكام التجويد</h4>
+                    <div class="stat-number" style="color: var(--primary-700);">{{ data.recitation_stats.avg_tajweed }} / 10</div>
+                    <div class="stat-meta">معيار المخارج والصفات</div>
+                </div>
+            </div>
+
+            <div class="stat-card blue" style="padding: 1rem;">
+                <div class="stat-info">
+                    <h4>المعدل التراكمي العام</h4>
+                    <div class="stat-number" style="color: #0284c7;">{{ data.recitation_stats.avg_percentage }}%</div>
+                    <div class="stat-meta">نسبة التميز الكلية</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- جدول تفاصيل جلسات التسميع والتقييمات -->
+        <div style="border: 1px solid var(--slate-200); border-radius: var(--radius-md); overflow: hidden;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>التاريخ</th>
+                        <th>الحلقة والشيخ</th>
+                        <th>نوع التسميع</th>
+                        <th>الموضع القرآني الدقيق</th>
+                        <th>الدرجة الكلية</th>
+                        <th>التقدير</th>
+                        <th>ملاحظات وتوجيهات الشيخ</th>
+                        <th>المقرر القادم</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rec in data.recitations_history %}
+                    <tr>
+                        <td><strong>{{ rec.date|date:"Y/m/d" }}</strong></td>
+                        <td>
+                            <div>{{ rec.halaqah.name }}</div>
+                            <small style="color: var(--gold-700);">الشيخ: {{ rec.sheikh.display_name }}</small>
+                        </td>
+                        <td>
+                            <span class="badge" style="background: var(--slate-100); color: var(--slate-800);">
+                                {{ rec.get_recitation_type_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="quranic-font" style="font-size: 1rem; color: var(--primary-900);">
+                                {{ rec.location_display }}
+                            </span>
+                            <div style="font-size: 0.75rem; color: var(--slate-400);">{{ rec.pages_completed }} صفحات</div>
+                        </td>
+                        <td>
+                            <strong>{{ rec.total_score }}/30</strong>
+                            <div style="font-size: 0.75rem; color: var(--slate-500);">({{ rec.percentage }}%)</div>
+                        </td>
+                        <td>
+                            <span class="grade-pill grade-{{ rec.rating_grade|lower }}">
+                                {{ rec.rating_grade }}
+                            </span>
+                        </td>
+                        <td><small style="color: var(--slate-700);">{{ rec.sheikh_notes|default:"-" }}</small></td>
+                        <td><small style="color: var(--primary-700); font-weight: 700;">{{ rec.next_assignment|default:"-" }}</small></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; color: var(--slate-400); padding: 2rem;">لا توجد جلسات تسميع مسجلة بعد.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- تذييل التقرير والتوقيعات والاعتماد الرسمي -->
+    <div style="margin-top: 3.5rem; padding-top: 2rem; border-top: 2px dashed var(--slate-300); display: flex; justify-content: space-between; align-items: flex-end;">
+        <div style="text-align: center; width: 220px;">
+            <p style="font-weight: 700; color: var(--slate-700); margin-bottom: 2.5rem;">فضيلة الشيخ المشرف الحالي:</p>
+            <div style="border-bottom: 1.5px solid var(--slate-400); width: 100%; margin-bottom: 0.5rem;"></div>
+            <small style="color: var(--slate-500);">{{ data.current_sheikh.display_name|default:"........................" }}</small>
+        </div>
+
+        <div style="text-align: center; border: 2px dashed var(--gold-500); padding: 1rem 1.5rem; border-radius: var(--radius-md);">
+            <div style="font-weight: 800; color: var(--primary-900); margin-bottom: 0.25rem;">ختم إدارة {{ academy_name }}</div>
+            <small style="color: var(--gold-700);">معتمد وصادر رسمياً</small>
+        </div>
+
+        <div style="text-align: center; width: 220px;">
+            <p style="font-weight: 700; color: var(--slate-700); margin-bottom: 2.5rem;">مدير الشؤون التعليمية والقرآنية:</p>
+            <div style="border-bottom: 1.5px solid var(--slate-400); width: 100%; margin-bottom: 0.5rem;"></div>
+            <small style="color: var(--slate-500);">{% if org and org.scientific_director %}{{ org.scientific_director }}{% else %}........................{% endif %}</small>
+        </div>
+    </div>
+</div>
+{% endblock %}

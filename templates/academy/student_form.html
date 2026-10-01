@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - صرح القرآن الكريم{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-title">
+        <h2>{{ title }}</h2>
+        <p>تسجيل بيانات الطالب الأساسية وولي الأمر والمستوى المبدئي</p>
+    </div>
+    <a href="{% url 'academy:student_list' %}" class="btn btn-outline btn-sm">رجوع لقائمة الطلاب</a>
+</div>
+
+<div class="card" style="max-width: 850px; margin: 0 auto;">
+    <div class="card-body" style="padding: 2rem;">
+        <form method="post">
+            {% csrf_token %}
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                <div class="form-group">
+                    <label class="form-label">الاسم الأول للطالب: *</label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}<small style="color: #e11d48;">{{ form.first_name.errors.0 }}</small>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">اسم العائلة / اللقب: *</label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}<small style="color: #e11d48;">{{ form.last_name.errors.0 }}</small>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">اسم المستخدم للدخول: *</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}<small style="color: #e11d48;">{{ form.username.errors.0 }}</small>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ form.password.label }}:</label>
+                    {{ form.password }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">رقم هاتف الطالب / المنزل:</label>
+                    {{ form.phone_number }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">رقم الهوية / الإقامة:</label>
+                    {{ form.national_id }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">تاريخ الميلاد:</label>
+                    {{ form.birth_date }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">الجنس:</label>
+                    {{ form.gender }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">المستوى القرآني المبدئي:</label>
+                {{ form.current_memorization_level }}
+                <small style="color: var(--slate-400);">مثال: حافظ لـ 5 أجزاء، جزء عم فقط، مبتدئ في التلقين...</small>
+            </div>
+
+            <div style="border-top: 1px dashed var(--slate-200); margin: 1.5rem 0; padding-top: 1.25rem;">
+                <h4 style="color: var(--primary-900); margin-bottom: 1rem;">👨‍👧‍👦 بيانات ولي الأمر والتواصل:</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label">اسم ولي الأمر: *</label>
+                        {{ form.guardian_name }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">رقم هاتف ولي الأمر: *</label>
+                        {{ form.guardian_phone }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">صلة القرابة:</label>
+                        {{ form.guardian_relation }}
+                    </div>
+                </div>
+            </div>
+
+            {% if not is_edit %}
+            <div style="border-top: 1px dashed var(--slate-200); margin: 1.5rem 0; padding-top: 1.25rem;">
+                <h4 style="color: var(--primary-900); margin-bottom: 1rem;">🕌 التسكين المبدئي في حلقة قرآنية:</h4>
+                <div class="form-group">
+                    <label class="form-label">اختر الحلقة لإلحاق الطالب بها فوراً:</label>
+                    <select name="initial_halaqah" class="form-select">
+                        <option value="">-- بدون إلحاق بحلقة حالياً --</option>
+                        {% for h in halaqat %}
+                        <option value="{{ h.id }}">{{ h.name }} (الشيخ: {{ h.teacher.display_name|default:"غير محدد" }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label class="form-label">العنوان السكني:</label>
+                {{ form.address }}
+            </div>
+
+            <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem;">
+                {{ form.is_active }}
+                <label for="{{ form.is_active.id_for_label }}" style="font-weight: 700; cursor: pointer;">طالب نشط بالمنظومة</label>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; border-top: 1px solid var(--slate-200); padding-top: 1.5rem;">
+                <a href="{% url 'academy:student_list' %}" class="btn btn-outline">إلغاء</a>
+                <button type="submit" class="btn btn-primary" style="padding: 0.65rem 2rem;">
+                    💾 حفظ بيانات الطالب
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

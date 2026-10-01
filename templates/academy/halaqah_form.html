@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - صرح القرآن الكريم{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-title">
+        <h2>{{ title }}</h2>
+        <p>تحديد بيانات الحلقة، الشيخ المشرف، المواعيد، والسعة الاستيعابية</p>
+    </div>
+    <a href="{% url 'academy:halaqah_list' %}" class="btn btn-outline btn-sm">رجوع للحلقات</a>
+</div>
+
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div class="card-body" style="padding: 2rem;">
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">اسم الحلقة / المجموعة: *</label>
+                {{ form.name }}
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                <div class="form-group">
+                    <label class="form-label">فضيلة الشيخ المشرف: *</label>
+                    {{ form.teacher }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">المسار والتصنيف: *</label>
+                    {{ form.category }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">أيام الانعقاد: *</label>
+                    {{ form.days_schedule }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">الفترة الزمنية: *</label>
+                    {{ form.time_period }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">التوقيت بالساعات:</label>
+                    {{ form.time_detail }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">المقر / القاعة الدراسية:</label>
+                    {{ form.room_location }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">الحد الأقصى لعدد الطلاب:</label>
+                    {{ form.max_students }}
+                </div>
+                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 1.75rem;">
+                    {{ form.is_active }}
+                    <label for="{{ form.is_active.id_for_label }}" style="font-weight: 700; cursor: pointer;">حلقة نشطة وقائمة</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">وصف الحلقة والمنهج المعتمد:</label>
+                {{ form.description }}
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; border-top: 1px solid var(--slate-200); padding-top: 1.5rem;">
+                <a href="{% url 'academy:halaqah_list' %}" class="btn btn-outline">إلغاء</a>
+                <button type="submit" class="btn btn-primary" style="padding: 0.65rem 2rem;">
+                    💾 حفظ بيانات الحلقة
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

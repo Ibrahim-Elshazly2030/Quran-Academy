@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+
+{% block title %}تقييم التسميع القرآني - {{ halaqah.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-title">
+        <h2>جلسة التسميع والتقييم القرآني</h2>
+        <p>حلقة: <strong>{{ halaqah.name }}</strong> | فضيلة الشيخ المقيم: <strong>{{ halaqah.teacher.display_name }}</strong></p>
+    </div>
+    <div>
+        {% if is_teacher %}
+            <a href="{% url 'academy:sheikh_dashboard' %}" class="btn btn-outline btn-sm">رجوع للرئيسية</a>
+        {% else %}
+            <a href="{% url 'academy:halaqah_detail' halaqah.id %}" class="btn btn-outline btn-sm">تفاصيل الحلقة</a>
+        {% endif %}
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem;">
+    <!-- استمارة التقييم وفق الجداول المعتمدة -->
+    <div class="card" style="border: 2px solid var(--primary-600);">
+        <div class="card-header" style="background: var(--primary-50);">
+            <h3 style="color: var(--primary-900);">📖 استمارة التسميع والتقييم المعتمدة</h3>
+        </div>
+        <div class="card-body" style="padding: 1.75rem;">
+            <form method="post" id="eval_form">
+                {% csrf_token %}
+                
+                <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 800; color: var(--primary-900);">
+                            اختر الطالب: *
+                        </label>
+                        {{ form.student }}
+                        {% if form.student.errors %}<small style="color: #e11d48;">{{ form.student.errors.0 }}</small>{% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">تاريخ الجلسة: *</label>
+                        {{ form.date }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">نوع التسميع القرآني: *</label>
+                    {{ form.recitation_type }}
+                </div>
+
+                <!-- الموضع القرآني الدقيق -->
+                <div style="background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.25rem;">
+                    <h4 style="font-size: 0.95rem; color: var(--primary-900); margin-bottom: 0.75rem;">📍 الموضع القرآني المقروء:</h4>
+                    <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+                        <div>
+                            <label class="form-label" style="font-size: 0.8rem;">من سورة:</label>
+                            {{ form.surah_from }}
+                        </div>
+                        <div>
+                            <label class="form-label" style="font-size: 0.8rem;">من آية:</label>
+                            {{ form.ayah_from }}
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+                        <div>
+                            <label class="form-label" style="font-size: 0.8rem;">إلى سورة:</label>
+                            {{ form.surah_to }}
+                        </div>
+                        <div>
+                            <label class="form-label" style="font-size: 0.8rem;">إلى آية:</label>
+                            {{ form.ayah_to }}
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" style="font-size: 0.8rem;">عدد الصفحات المنجزة:</label>
+                        {{ form.pages_completed }}
+                    </div>
+                </div>
+
+                <!-- درجات جدول التقييم المعتمد -->
+                <div style="background: var(--gold-50); border: 1.5px solid var(--gold-300); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.25rem;">
+                    <h4 style="font-size: 1rem; color: var(--gold-700); font-weight: 800; margin-bottom: 0.75rem;">
+                        📊 درجات جدول التقييم (المجموع الكلي: 30 درجة):
+                    </h4>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">1. جودة الحفظ والضبط (من 10):</label>
+                            {{ form.score_memorization }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">2. التجويد ومخارج الحروف (من 10):</label>
+                            {{ form.score_tajweed }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">3. الترتيل والوقف والابتداء (من 5):</label>
+                            {{ form.score_fluency }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">4. السلوك والآداب (من 5):</label>
+                            {{ form.score_discipline }}
+                        </div>
+                    </div>
+
+                    <!-- المؤشر التلقائي للدرجة والتقدير المباشر -->
+                    <div style="background: #ffffff; border-radius: var(--radius-sm); padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--gold-400); margin-top: 0.5rem;">
+                        <div>
+                            <span style="font-size: 0.9rem; color: var(--slate-600);">المجموع التقديري:</span>
+                            <strong id="live_total" style="font-size: 1.25rem; color: var(--primary-800); margin-right: 0.35rem;">30</strong> / 30
+                            <span id="live_percentage" style="font-size: 0.9rem; color: var(--slate-500); margin-right: 0.5rem;">(100%)</span>
+                        </div>
+                        <div>
+                            <span id="live_grade_badge" class="grade-pill grade-a-plus" style="font-size: 1rem; padding: 0.35rem 1rem;">
+                                ممتاز مرتفع A+
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- إحصاء الأخطاء والترددات -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem;">
+                    <div class="form-group">
+                        <label class="form-label" style="font-size: 0.8rem;">الترددات والتعثرات:</label>
+                        {{ form.hesitations_count }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="font-size: 0.8rem; color: #e11d48;">اللحن الجلي (حركة/حرف):</label>
+                        {{ form.major_mistakes }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="font-size: 0.8rem; color: #d97706;">اللحن الخفي (غنة/مد):</label>
+                        {{ form.minor_mistakes }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">ملاحظات وتوجيهات الشيخ للطالب:</label>
+                    {{ form.sheikh_notes }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="color: var(--primary-800); font-weight: 800;">
+                        المقرر والواجب للجلسة القادمة:
+                    </label>
+                    {{ form.next_assignment }}
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-size: 1.1rem; margin-top: 1rem;" id="save_evaluation_btn">
+                    💾 اعتماد وحفظ تقييم التسميع
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- معايير التقييم وأحدث التقييمات المسجلة -->
+    <div>
+        <!-- بطاقة المعايير المعتمدة -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+            <div class="card-header">
+                <h3>📋 معايير جدول التقييم المعتمدة</h3>
+            </div>
+            <div class="card-body" style="padding: 1rem 1.25rem;">
+                <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.75rem;">
+                    {% for c in criteria %}
+                    <li style="border-bottom: 1px dashed var(--slate-200); padding-bottom: 0.5rem;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <strong style="color: var(--primary-900);">{{ c.name }}</strong>
+                            <span class="badge" style="background: var(--gold-100); color: var(--gold-700);">القصوى: {{ c.max_score }}</span>
+                        </div>
+                        <small style="color: var(--slate-500);">{{ c.description }}</small>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- أحدث تقييمات الحلقة -->
+        <div class="card">
+            <div class="card-header">
+                <h3>📜 أحدث تقييمات طلاب الحلقة</h3>
+            </div>
+            <div class="card-body" style="padding: 0;">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>الطالب</th>
+                                <th>الموضع</th>
+                                <th>الدرجة</th>
+                                <th>التقدير</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in recent_sessions %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'reports:student_report' s.student.id %}" style="font-weight: 700; color: var(--primary-900); text-decoration: none;">
+                                        {{ s.student.display_name }}
+                                    </a>
+                                </td>
+                                <td><small class="quranic-font">{{ s.location_display }}</small></td>
+                                <td><strong>{{ s.total_score }}/30</strong></td>
+                                <td>
+                                    <span class="grade-pill grade-{{ s.rating_grade|lower }}">
+                                        {{ s.rating_grade }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" style="text-align: center; color: var(--slate-400); padding: 2rem;">
+                                    لا توجد تقييمات مسجلة مؤخراً لهذه الحلقة.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateLiveScores() {
+    const memo = parseFloat(document.getElementById('id_score_memorization').value) || 0;
+    const tajweed = parseFloat(document.getElementById('id_score_tajweed').value) || 0;
+    const fluency = parseFloat(document.getElementById('id_score_fluency').value) || 0;
+    const disc = parseFloat(document.getElementById('id_score_discipline').value) || 0;
+
+    const total = (memo + tajweed + fluency + disc).toFixed(1);
+    const pct = Math.round((total / 30.0) * 100);
+
+    document.getElementById('live_total').innerText = total;
+    document.getElementById('live_percentage').innerText = '(' + pct + '%)';
+
+    const badge = document.getElementById('live_grade_badge');
+    badge.className = 'grade-pill';
+
+    if (pct >= 95) {
+        badge.innerText = 'ممتاز مرتفع A+';
+        badge.classList.add('grade-a-plus');
+    } else if (pct >= 90) {
+        badge.innerText = 'ممتاز A';
+        badge.classList.add('grade-a');
+    } else if (pct >= 80) {
+        badge.innerText = 'جيد جداً B';
+        badge.classList.add('grade-b');
+    } else if (pct >= 70) {
+        badge.innerText = 'جيد C';
+        badge.classList.add('grade-c');
+    } else if (pct >= 60) {
+        badge.innerText = 'مقبول D';
+        badge.classList.add('grade-d');
+    } else {
+        badge.innerText = 'يحتاج إعادة F';
+        badge.classList.add('grade-f');
+    }
+}
+
+document.querySelectorAll('.score-field').forEach(input => {
+    input.addEventListener('input', updateLiveScores);
+});
+
+window.addEventListener('DOMContentLoaded', updateLiveScores);
+</script>
+{% endblock %}

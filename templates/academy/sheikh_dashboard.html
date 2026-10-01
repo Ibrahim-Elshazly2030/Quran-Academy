@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block title %}بوابة فضيلة الشيخ {{ sheikh.display_name }} - صرح القرآن{% endblock %}
+
+{% block content %}
+<div class="page-header" style="background: linear-gradient(135deg, #064e3b 0%, #047857 100%); color: #ffffff;">
+    <div class="page-title">
+        <h2 style="color: #ffffff;">مرحباً بكم فضيلة الشيخ {{ sheikh.display_name }}</h2>
+        <p style="color: var(--gold-300, #fde68a);">
+            بوابة إدارة حلقاتكم القرآنية، رصد الحضور والغياب، وتقييم التسميع وفق الجداول المعتمدة
+        </p>
+    </div>
+    <div>
+        <a href="{% url 'reports:sheikh_report' sheikh.id %}" class="btn btn-gold btn-sm">
+            📜 تقرير أدائي وسجل إنجازاتي الشامل
+        </a>
+    </div>
+</div>
+
+<!-- بطاقات إحصائيات الشيخ الشخصية -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon emerald">🕌</div>
+        <div class="stat-info">
+            <h4>حلقاتي النشطة</h4>
+            <div class="stat-number">{{ my_halaqat.count }}</div>
+            <div class="stat-meta">حلقات تحت إشرافكم</div>
+        </div>
+    </div>
+
+    <div class="stat-card gold">
+        <div class="stat-icon gold">👥</div>
+        <div class="stat-info">
+            <h4>إجمالي طلاب مجموعاتي</h4>
+            <div class="stat-number">{{ total_my_students }}</div>
+            <div class="stat-meta">طلاب مقيدون بحلقاتكم حصراً</div>
+        </div>
+    </div>
+
+    <div class="stat-card blue">
+        <div class="stat-icon blue">📝</div>
+        <div class="stat-info">
+            <h4>رصد حضور اليوم</h4>
+            <div class="stat-number">{{ today_marked_count }}</div>
+            <div class="stat-meta">طالباً تم رصدهم ليوم {{ today|date:"Y/m/d" }}</div>
+        </div>
+    </div>
+
+    <div class="stat-card rose">
+        <div class="stat-icon rose">📜</div>
+        <div class="stat-info">
+            <h4>جلسات التسميع المنجزة</h4>
+            <div class="stat-number">{{ recent_evaluations.count }}</div>
+            <div class="stat-meta">تقييمات أخيرة مسجلة</div>
+        </div>
+    </div>
+</div>
+
+<!-- الحلقات التابعة للشيخ حصراً -->
+<div class="card">
+    <div class="card-header">
+        <h3>🕌 حلقاتي ومجموعاتي القرآنية</h3>
+    </div>
+    <div class="card-body">
+        <div class="halaqat-grid">
+            {% for h in my_halaqat %}
+            <div class="halaqah-card">
+                <div>
+                    <div class="halaqah-card-header">
+                        <div class="halaqah-title">{{ h.name }}</div>
+                        <span class="badge" style="background: var(--primary-100); color: var(--primary-800); margin-top: 0.35rem;">
+                            {{ h.get_category_display }}
+                        </span>
+                    </div>
+
+                    <ul class="halaqah-meta">
+                        <li><span>🗓️ الأيام:</span> {{ h.days_schedule }}</li>
+                        <li><span>⏰ التوقيت:</span> {{ h.get_time_period_display }} ({{ h.time_detail }})</li>
+                        <li><span>📍 المقر:</span> {{ h.room_location|default:"المقر الرئيسي" }}</li>
+                        <li>
+                            <span>👥 طلاب الحلقة:</span>
+                            <strong style="color: var(--primary-700);">{{ h.students_count }} طالب مقيد</strong>
+                        </li>
+                    </ul>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem; border-top: 1px solid var(--slate-100); padding-top: 1rem;">
+                    <div style="display: flex; gap: 0.5rem;">
+                        <a href="{% url 'attendance:halaqah_attendance_sheet' h.id %}" class="btn btn-primary btn-sm" style="flex: 1;">
+                            📝 رصد الحضور اليومي
+                        </a>
+                        <a href="{% url 'evaluations:halaqah_evaluate' h.id %}" class="btn btn-gold btn-sm" style="flex: 1;">
+                            📖 تقييم التسميع
+                        </a>
+                    </div>
+                    <a href="{% url 'academy:sheikh_halaqah_view' h.id %}" class="btn btn-outline btn-sm" style="width: 100%;">
+                        استعراض طلاب الحلقة وبطاقاتهم
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; background: #fff; border-radius: var(--radius-lg);">
+                <p style="color: var(--slate-500);">لا توجد حلقات مسندة لفضيلتكم حالياً. يرجى مراجعة إدارة الأكاديمية.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- أحدث جلسات التسميع والتقييم التي قام بها الشيخ -->
+<div class="card">
+    <div class="card-header">
+        <h3>📖 أحدث جلسات التسميع والتقييم لطلابكم</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>الطالب</th>
+                        <th>الحلقة</th>
+                        <th>التاريخ</th>
+                        <th>الموضع القرآني</th>
+                        <th>الدرجة الكلية</th>
+                        <th>التقدير</th>
+                        <th>الملاحظة / الواجب القادم</th>
+                        <th>سجل الطالب</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rec in recent_evaluations %}
+                    <tr>
+                        <td><strong>{{ rec.student.display_name }}</strong></td>
+                        <td><small>{{ rec.halaqah.name }}</small></td>
+                        <td>{{ rec.date|date:"Y/m/d" }}</td>
+                        <td>
+                            <span class="quranic-font" style="font-size: 0.95rem;">{{ rec.location_display }}</span>
+                        </td>
+                        <td><strong>{{ rec.total_score }}/30</strong> ({{ rec.percentage }}%)</td>
+                        <td>
+                            <span class="grade-pill grade-{{ rec.rating_grade|lower }}">
+                                {{ rec.rating_grade }}
+                            </span>
+                        </td>
+                        <td>
+                            <small style="color: var(--slate-600);">
+                                {% if rec.sheikh_notes %}{{ rec.sheikh_notes }}{% else %}{{ rec.next_assignment }}{% endif %}
+                            </small>
+                        </td>
+                        <td>
+                            <a href="{% url 'reports:student_report' rec.student.id %}" class="btn btn-outline btn-sm">
+                                السجل الشامل
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; color: var(--slate-400); padding: 2rem;">
+                            لم يتم تسجيل جلسات تسميع مؤخراً.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

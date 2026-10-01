@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}إعدادات وهوية المنشأة - {{ academy_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-title">
+        <h2>إعدادات وهوية المنشأة / الأكاديمية</h2>
+        <p>
+            تسجيل اسم وشعار وبيانات منظمتك القرآنية — تظهر هذه البيانات تلقائياً في كافة الصفحات والتقارير الرسمية
+        </p>
+    </div>
+    <a href="{% url 'academy:admin_dashboard' %}" class="btn btn-outline btn-sm">رجوع للوحة الإدارة</a>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 380px; gap: 1.75rem; align-items: start;">
+
+    <!-- نموذج الإعدادات الرئيسي -->
+    <div>
+        <form method="post" enctype="multipart/form-data" id="org_settings_form">
+            {% csrf_token %}
+
+            <!-- 1. الهوية البصرية -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header" style="background: linear-gradient(135deg, var(--primary-900), var(--primary-800)); color: #fff;">
+                    <h3 style="color: #fff;">🏛️ الهوية البصرية وبيانات المنشأة</h3>
+                </div>
+                <div class="card-body" style="padding: 1.75rem;">
+                    <div class="form-group">
+                        <label class="form-label" style="font-size: 1rem; font-weight: 800; color: var(--primary-900);">
+                            اسم المنشأة / الأكاديمية / الدار القرآنية: *
+                        </label>
+                        {{ form.name }}
+                        <small style="color: var(--slate-400);">
+                            هذا الاسم يظهر في شريط التنقل وترويسة كافة التقارير الرسمية
+                        </small>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">الاسم بالإنجليزية (اختياري):</label>
+                            {{ form.name_en }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">الحرف الاختصاري للشعار:</label>
+                            {{ form.logo_icon_letter }}
+                            <small style="color: var(--slate-400);">يظهر في الدائرة الذهبية عند عدم رفع شعار</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">الشعار التعريفي / الرسالة:</label>
+                        {{ form.slogan }}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">شعار المنشأة (Logo):</label>
+                        {% if org.logo %}
+                        <div style="margin-bottom: 0.75rem; padding: 0.75rem; background: var(--slate-50); border-radius: var(--radius-md); border: 1px solid var(--slate-200); display: flex; align-items: center; gap: 1rem;">
+                            <img src="{{ org.logo.url }}" alt="الشعار الحالي"
+                                 style="height: 60px; width: auto; border-radius: var(--radius-sm); object-fit: contain; border: 1px solid var(--slate-200);">
+                            <div>
+                                <div style="font-weight: 700; color: var(--primary-900); font-size: 0.9rem;">الشعار الحالي</div>
+                                <small style="color: var(--slate-400);">يمكنك رفع شعار جديد لاستبداله</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {{ form.logo }}
+                        <small style="color: var(--slate-400);">الصيغ المدعومة: PNG, JPG, SVG — يُفضل خلفية شفافة (PNG)</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. بيانات التواصل -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <h3>📞 بيانات التواصل والعنوان</h3>
+                </div>
+                <div class="card-body" style="padding: 1.75rem;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">رقم الهاتف الرئيسي:</label>
+                            {{ form.phone_primary }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">رقم هاتف إضافي:</label>
+                            {{ form.phone_secondary }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">البريد الإلكتروني الرسمي:</label>
+                            {{ form.email }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">الموقع الإلكتروني:</label>
+                            {{ form.website }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">المدينة:</label>
+                            {{ form.city }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">الدولة:</label>
+                            {{ form.country }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">العنوان الكامل للمقر الرئيسي:</label>
+                        {{ form.address }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. البيانات الرسمية والمسؤولون -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <h3>📋 البيانات الرسمية والمسؤولون (تظهر في التقارير)</h3>
+                </div>
+                <div class="card-body" style="padding: 1.75rem;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">رقم الترخيص / السجل الرسمي:</label>
+                            {{ form.license_number }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">سنة التأسيس:</label>
+                            {{ form.founding_year }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">اسم المشرف العام / المدير التنفيذي:</label>
+                            {{ form.supervisor_name }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">لقب المشرف العام:</label>
+                            {{ form.supervisor_title }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">مدير الشؤون التعليمية والقرآنية:</label>
+                        {{ form.scientific_director }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. إعدادات التقارير -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <h3>📜 إعدادات التقارير الرسمية</h3>
+                </div>
+                <div class="card-body" style="padding: 1.75rem;">
+                    <div class="form-group">
+                        <label class="form-label">الآية / الحديث في تذييل كل تقرير:</label>
+                        {{ form.report_footer_quote }}
+                        <small style="color: var(--slate-400);">
+                            مثال: خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ
+                        </small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">ملاحظة ختامية في التقارير (اختياري):</label>
+                        {{ form.report_footer_note }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- زر الحفظ -->
+            <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                <a href="{% url 'academy:admin_dashboard' %}" class="btn btn-outline">إلغاء</a>
+                <button type="submit" class="btn btn-primary" id="save_org_btn"
+                        style="padding: 0.75rem 3rem; font-size: 1.05rem;">
+                    💾 حفظ إعدادات المنشأة
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- بطاقة المعاينة المباشرة -->
+    <div style="position: sticky; top: 90px;">
+        <div class="card" style="border: 2px solid var(--gold-400);">
+            <div class="card-header" style="background: var(--gold-50);">
+                <h3 style="color: var(--gold-700);">👁️ معاينة مباشرة للهوية</h3>
+            </div>
+            <div class="card-body" style="padding: 1.5rem;">
+
+                <!-- معاينة شريط التنقل -->
+                <div style="font-weight: 700; color: var(--slate-600); font-size: 0.8rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                    معاينة شريط التنقل:
+                </div>
+                <div style="background: var(--primary-900); border-radius: var(--radius-md); padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;">
+                    <div id="preview_icon" style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--gold-400), var(--gold-600)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.3rem; color: var(--primary-900); flex-shrink: 0;">
+                        {% if org.logo %}
+                            <img src="{{ org.logo.url }}" style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;">
+                        {% else %}
+                            {{ org.logo_icon_letter }}
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div id="preview_name" style="font-weight: 800; color: #fff; font-size: 0.95rem;">{{ org.name }}</div>
+                        <div id="preview_slogan" style="font-size: 0.7rem; color: #fde68a;">{{ org.slogan }}</div>
+                    </div>
+                </div>
+
+                <!-- معاينة ترويسة التقرير -->
+                <div style="font-weight: 700; color: var(--slate-600); font-size: 0.8rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                    معاينة ترويسة التقرير الرسمي:
+                </div>
+                <div style="border: 1.5px solid var(--slate-200); border-radius: var(--radius-md); padding: 1rem; background: #fff;">
+                    <div style="border-bottom: 2px double var(--gold-500); padding-bottom: 0.75rem; margin-bottom: 0.75rem;">
+                        <div id="report_name_preview" style="font-size: 1.1rem; font-weight: 900; color: var(--primary-900);">{{ org.name }}</div>
+                        <div id="report_slogan_preview" style="font-size: 0.8rem; color: var(--slate-600);">{{ org.slogan }}</div>
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--slate-500);">
+                        {% if org.supervisor_name %}<div>المشرف العام: <strong id="report_supervisor_preview">{{ org.supervisor_name }}</strong></div>{% endif %}
+                        {% if org.phone_primary %}<div>هاتف: {{ org.phone_primary }}</div>{% endif %}
+                        {% if org.city %}<div>{{ org.city }}{% if org.country %} — {{ org.country }}{% endif %}</div>{% endif %}
+                    </div>
+                    <div style="border-top: 1px dashed var(--slate-200); margin-top: 0.75rem; padding-top: 0.75rem; font-size: 0.75rem; color: var(--primary-800); font-weight: 700; text-align: center;" class="quranic-font">
+                        <span id="report_footer_preview">{{ org.report_footer_quote }}</span>
+                    </div>
+                </div>
+
+                <!-- تنبيه أين تظهر البيانات -->
+                <div style="margin-top: 1.25rem; background: var(--primary-50); border: 1px solid var(--primary-200); border-radius: var(--radius-md); padding: 1rem; font-size: 0.82rem; color: var(--primary-900);">
+                    <strong style="display: block; margin-bottom: 0.5rem;">📍 أماكن ظهور بيانات المنشأة:</strong>
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.35rem;">
+                        <li>✅ شريط التنقل العلوي في كل الصفحات</li>
+                        <li>✅ ترويسة وتذييل تقارير الطلاب</li>
+                        <li>✅ ترويسة وتذييل تقارير الشيوخ</li>
+                        <li>✅ خانات توقيع المسؤولين في التقارير</li>
+                        <li>✅ تبويب المتصفح (title)</li>
+                        <li>✅ الفوتر السفلي لكل الصفحات</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// معاينة فورية للتغييرات قبل الحفظ
+function updatePreview(fieldId, previewId, prefix) {
+    const field = document.getElementById(fieldId);
+    const preview = document.getElementById(previewId);
+    if (field && preview) {
+        field.addEventListener('input', () => {
+            preview.textContent = (prefix || '') + field.value;
+        });
+    }
+}
+
+// الاسم والشعار
+const nameField = document.getElementById('id_name');
+const sloganField = document.getElementById('id_slogan');
+const letterField = document.getElementById('id_logo_icon_letter');
+const footerField = document.getElementById('id_report_footer_quote');
+const supervisorField = document.getElementById('id_supervisor_name');
+
+if (nameField) nameField.addEventListener('input', () => {
+    document.getElementById('preview_name').textContent = nameField.value;
+    document.getElementById('report_name_preview').textContent = nameField.value;
+});
+if (sloganField) sloganField.addEventListener('input', () => {
+    document.getElementById('preview_slogan').textContent = sloganField.value;
+    document.getElementById('report_slogan_preview').textContent = sloganField.value;
+});
+if (letterField) letterField.addEventListener('input', () => {
+    const iconEl = document.getElementById('preview_icon');
+    iconEl.textContent = letterField.value;
+});
+if (footerField) footerField.addEventListener('input', () => {
+    document.getElementById('report_footer_preview').textContent = footerField.value;
+});
+if (supervisorField) supervisorField.addEventListener('input', () => {
+    const el = document.getElementById('report_supervisor_preview');
+    if (el) el.textContent = supervisorField.value;
+});
+
+// معاينة الشعار المرفوع
+const logoField = document.getElementById('id_logo');
+if (logoField) {
+    logoField.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const iconEl = document.getElementById('preview_icon');
+                iconEl.innerHTML = `<img src="${ev.target.result}" style="width:100%; height:100%; object-fit:contain; border-radius:8px;">`;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+</script>
+{% endblock %}

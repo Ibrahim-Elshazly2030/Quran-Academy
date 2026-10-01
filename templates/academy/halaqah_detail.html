@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block title %}تفاصيل {{ halaqah.name }} - صرح القرآن{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-title">
+        <h2>{{ halaqah.name }}</h2>
+        <p>
+            فضيلة الشيخ المشرف: 
+            {% if halaqah.teacher %}
+                <strong>{{ halaqah.teacher.display_name }}</strong>
+            {% else %}
+                <span style="color: var(--slate-400);">غير محدد</span>
+            {% endif %}
+            | {{ halaqah.get_category_display }} | {{ halaqah.days_schedule }} ({{ halaqah.time_detail }})
+        </p>
+    </div>
+    <div style="display: flex; gap: 0.5rem;">
+        <a href="{% url 'attendance:halaqah_attendance_sheet' halaqah.id %}" class="btn btn-primary">
+            📝 كشف الحضور والغياب
+        </a>
+        <a href="{% url 'evaluations:halaqah_evaluate' halaqah.id %}" class="btn btn-gold">
+            📖 جلسة تقييم تسميع
+        </a>
+        {% if is_admin %}
+        <a href="{% url 'academy:halaqah_edit' halaqah.id %}" class="btn btn-outline">
+            ✏️ تعديل الحلقة
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- الطلاب المقيدون حالياً في الحلقة -->
+<div class="card">
+    <div class="card-header">
+        <h3>👥 الطلاب المقيدون حالياً ({{ active_enrollments.count }} / {{ halaqah.max_students }})</h3>
+        {% if is_admin %}
+        <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('enroll_modal').style.display='block'">
+            ➕ إلحاق طالب بالحلقة
+        </button>
+        {% endif %}
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>اسم الطالب</th>
+                        <th>تاريخ الانضمام للحلقة</th>
+                        <th>المستوى القرآني</th>
+                        <th>ولي الأمر وهاتفه</th>
+                        <th style="text-align: center;">الإجراءات والتقرير الشامل</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for enr in active_enrollments %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            <strong style="color: var(--primary-900); font-size: 1rem;">
+                                {{ enr.student.display_name }}
+                            </strong>
+                            <div style="font-size: 0.75rem; color: var(--slate-400);">الهاتف: {{ enr.student.phone_number|default:"-" }}</div>
+                        </td>
+                        <td>{{ enr.start_date|date:"Y/m/d" }}</td>
+                        <td>{{ enr.student.current_memorization_level|default:"تحت التأسيس" }}</td>
+                        <td>
+                            <div>{{ enr.student.guardian_name|default:"-" }}</div>
+                            <small style="color: var(--slate-500);">{{ enr.student.guardian_phone }}</small>
+                        </td>
+                        <td style="text-align: center;">
+                            <div style="display: inline-flex; gap: 0.35rem;">
+                                <a href="{% url 'reports:student_report' enr.student.id %}" class="btn btn-gold btn-sm" title="التقرير التاريخي المستوفي للطالب">
+                                    📜 التقرير الشامل
+                                </a>
+                                <a href="{% url 'evaluations:halaqah_evaluate' halaqah.id %}?student={{ enr.student.id }}" class="btn btn-primary btn-sm" title="تسجيل جلسة تسميع فورية">
+                                    📖 تقييم تسميع
+                                </a>
+                                {% if is_admin %}
+                                <a href="{% url 'academy:student_transfer' enr.student.id %}" class="btn btn-outline btn-sm" title="نقل إلى حلقة أخرى مع حفظ التاريخ">
+                                    🔄 نقل لحلقة أخرى
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--slate-400); padding: 3rem;">
+                            لا يوجد طلاب مقيدون في هذه الحلقة حالياً.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- السجل التاريخي: الطلاب السابقون الذين درسوا في هذه الحلقة وانتقلوا أو تخرجوا -->
+{% if historical_enrollments %}
+<div class="card" style="border: 1px dashed var(--slate-300);">
+    <div class="card-header" style="background: var(--slate-50);">
+        <h3>📜 الأرشيف التاريخي: طلاب سابقون درسوا بهذه الحلقة ({{ historical_enrollments.count }})</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>الطالب</th>
+                        <th>تاريخ البدء</th>
+                        <th>تاريخ الانتهاء</th>
+                        <th>الحالة</th>
+                        <th>ملاحظات النقل أو التخرج</th>
+                        <th>التقرير التاريخي</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h_enr in historical_enrollments %}
+                    <tr>
+                        <td><strong>{{ h_enr.student.display_name }}</strong></td>
+                        <td>{{ h_enr.start_date|date:"Y/m/d" }}</td>
+                        <td>{{ h_enr.end_date|date:"Y/m/d"|default:"-" }}</td>
+                        <td>
+                            <span class="badge badge-leave">{{ h_enr.get_status_display }}</span>
+                        </td>
+                        <td><small style="color: var(--slate-600);">{{ h_enr.notes }}</small></td>
+                        <td>
+                            <a href="{% url 'reports:student_report' h_enr.student.id %}" class="btn btn-outline btn-sm">
+                                استعراض السجل الشامل
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- نافذة إلحاق طالب موجود بالحلقة -->
+{% if is_admin %}
+<div id="enroll_modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 2000; align-items: center; justify-content: center;">
+    <div style="background: #ffffff; border-radius: var(--radius-lg); max-width: 500px; width: 90%; margin: 5rem auto; padding: 2rem; box-shadow: var(--shadow-lg);">
+        <h3 style="margin-bottom: 1.5rem; color: var(--primary-900);">➕ إلحاق طالب بحلقة {{ halaqah.name }}</h3>
+        <form method="post" action="{% url 'academy:halaqah_enroll_student' halaqah.id %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">اختر الطالب:</label>
+                {{ enroll_form.student }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">ملاحظات القيد المبدئي:</label>
+                {{ enroll_form.notes }}
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+                <button type="button" class="btn btn-outline" onclick="document.getElementById('enroll_modal').style.display='none'">إلغاء</button>
+                <button type="submit" class="btn btn-primary">تأكيد القيد</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

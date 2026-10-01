@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}إدارة المشايخ والمقرئين - صرح القرآن{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-title">
+        <h2>هيئة المشايخ والمقرئين</h2>
+        <p>إدارة ملفات الشيوخ، إسناد الإجازات، ومتابعة الحلقات المشرفين عليها</p>
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
+        <form method="get" style="display: flex; gap: 0.5rem;">
+            <input type="text" name="q" value="{{ query }}" placeholder="بحث باسم الشيخ أو الهاتف..." class="form-control" style="width: 250px;">
+            <button type="submit" class="btn btn-outline btn-sm">بحث</button>
+        </form>
+        <a href="{% url 'academy:sheikh_add' %}" class="btn btn-primary">➕ إضافة شيخ جديد</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body" style="padding: 0;">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>الشيخ / المقرئ</th>
+                        <th>المؤهل والخبرة</th>
+                        <th>الحلقات المشرف عليها</th>
+                        <th>سند الإجازات القرآنية</th>
+                        <th>الهاتف</th>
+                        <th>الحالة</th>
+                        <th style="text-align: center;">الإجراءات والتقرير الشامل</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in sheikhs %}
+                    <tr>
+                        <td>
+                            <strong style="font-size: 1rem; color: var(--primary-900);">
+                                فضيلة الشيخ {{ s.display_name }}
+                            </strong>
+                            <div style="font-size: 0.75rem; color: var(--slate-400);">اسم المستخدم: <code>{{ s.username }}</code></div>
+                        </td>
+                        <td>
+                            <div>{{ s.qualification|default:"معلم قرآن كريم" }}</div>
+                            <small style="color: var(--gold-700); font-weight: 700;">خبرة: {{ s.years_of_experience }} سنوات</small>
+                        </td>
+                        <td>
+                            <span class="badge" style="background: var(--primary-50); color: var(--primary-700); border: 1px solid var(--primary-200);">
+                                {{ s.active_groups }} حلقات نشطة
+                            </span>
+                        </td>
+                        <td style="max-width: 250px;">
+                            <div style="font-size: 0.82rem; color: var(--slate-700); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ s.ijazah_details }}">
+                                {{ s.ijazah_details|default:"مسجل كمعلم محفظ" }}
+                            </div>
+                        </td>
+                        <td>{{ s.phone_number|default:"-" }}</td>
+                        <td>
+                            {% if s.is_active %}
+                                <span class="badge badge-present">نشط</span>
+                            {% else %}
+                                <span class="badge badge-absent-unexcused">معطل</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">
+                            <div style="display: inline-flex; gap: 0.35rem;">
+                                <a href="{% url 'reports:sheikh_report' s.id %}" class="btn btn-gold btn-sm" title="التقرير التاريخي الشامل للشيخ">
+                                    📜 التقرير الشامل
+                                </a>
+                                <a href="{% url 'academy:sheikh_edit' s.id %}" class="btn btn-outline btn-sm" title="تعديل البيانات">
+                                    ✏️ تعديل
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: var(--slate-400); padding: 3rem;">
+                            لا يوجد مشايخ مسجلون حالياً بالمحددات المطلوبة.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

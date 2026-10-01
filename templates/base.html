@@ -1,0 +1,107 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="منظومة صرح القرآن الكريم للتعليم والتحفيظ - إدارة الحلقات، متابعة الشيوخ والطلاب، كشوف الحضور والغياب، وجداول التقييم وسجلات التاريخ الشاملة.">
+    <title>{% block title %}{{ academy_name }}{% endblock %}</title>
+    <!-- خطوط جوجل العربية الفاخرة -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- التنسيق الأساسي للمنظومة -->
+    <link rel="stylesheet" href="{% static 'css/furqan.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- الهيدر وشريط التنقل الرئيسي -->
+    <header class="main-header no-print">
+        <div class="header-container">
+            <a href="{% url 'accounts:dashboard_redirect' %}" class="brand-wrapper" id="brand_home_link">
+                <div class="brand-icon">
+                    {% if org and org.logo %}
+                        <img src="{{ org.logo.url }}" alt="{{ academy_name }}" style="width:100%; height:100%; object-fit:contain; border-radius: inherit;">
+                    {% else %}
+                        <span>{{ academy_icon_letter }}</span>
+                    {% endif %}
+                </div>
+                <div class="brand-text">
+                    <h1>{{ academy_name }}</h1>
+                    <span>{{ academy_slogan }}</span>
+                </div>
+            </a>
+
+            {% if user.is_authenticated %}
+            <nav>
+                <ul class="nav-links">
+                    {% if is_admin %}
+                        <li class="nav-item"><a href="{% url 'academy:admin_dashboard' %}" class="{% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">لوحة الإدارة</a></li>
+                        <li class="nav-item"><a href="{% url 'academy:sheikh_list' %}" class="{% if 'sheikh' in request.path and 'dashboard' not in request.path %}active{% endif %}">الشيوخ والمقرئون</a></li>
+                        <li class="nav-item"><a href="{% url 'academy:halaqah_list' %}" class="{% if 'halaqat' in request.path %}active{% endif %}">الحلقات والمجموعات</a></li>
+                        <li class="nav-item"><a href="{% url 'academy:student_list' %}" class="{% if 'student' in request.path %}active{% endif %}">سجل الطلاب والتحويلات</a></li>
+                        <li class="nav-item"><a href="{% url 'attendance:admin_attendance_overview' %}" class="{% if 'attendance' in request.path %}active{% endif %}">كشوف الحضور والغياب</a></li>
+                        <li class="nav-item"><a href="{% url 'reports:academy_overview' %}" class="{% if 'reports/overview' in request.path %}active{% endif %}">التقارير الشاملة</a></li>
+                        <li class="nav-item"><a href="{% url 'academy:organization_settings' %}" class="{% if 'organization' in request.path %}active{% endif %}" style="color: var(--gold-400);">⚙️ إعدادات المنشأة</a></li>
+                    {% elif is_teacher %}
+                        <li class="nav-item"><a href="{% url 'academy:sheikh_dashboard' %}" class="{% if request.resolver_match.url_name == 'sheikh_dashboard' %}active{% endif %}">حلقاتي وطلابي</a></li>
+                        <li class="nav-item"><a href="{% url 'reports:sheikh_report' user.id %}" class="{% if 'reports/sheikh' in request.path %}active{% endif %}">تقريري وسجل إنجازاتي</a></li>
+                    {% elif is_student %}
+                        <li class="nav-item"><a href="{% url 'reports:student_report' user.id %}">سجلي القرآني الشامل</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+
+            <div class="user-badge-wrapper">
+                <span class="role-pill {% if is_admin %}admin{% elif is_teacher %}teacher{% else %}student{% endif %}">
+                    {{ user.get_role_display }}
+                </span>
+                <span style="font-weight: 700; font-size: 0.9rem;">
+                    {{ user.display_name }}
+                </span>
+                <a href="{% url 'accounts:profile' %}" class="btn btn-outline btn-sm" style="color: #ffffff; border-color: rgba(255,255,255,0.4);" title="الملف الشخصي">
+                    الملف
+                </a>
+                <a href="{% url 'accounts:logout' %}" class="btn-logout" id="logout_btn">
+                    خروج
+                </a>
+            </div>
+            {% else %}
+            <div>
+                <a href="{% url 'accounts:login' %}" class="btn btn-gold btn-sm" id="nav_login_btn">تسجيل الدخول</a>
+            </div>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- مساحة المحتوى الرئيسية -->
+    <main class="main-content">
+        <!-- التنبيهات ورسائل النظام -->
+        {% if messages %}
+        <div class="alert-messages no-print">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- الفوتر -->
+    <footer class="main-footer no-print">
+        <p>{{ academy_name }} &copy; {% now "Y" %} —
+        {% if org and org.report_footer_quote %}
+            {{ org.report_footer_quote }}
+        {% else %}
+            خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ
+        {% endif %}
+        </p>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
